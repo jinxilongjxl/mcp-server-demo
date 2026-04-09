@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: mcp-server-demo
+  ai:
+    mcp:
+      server:
+        name: mcp-server-demo
+        version: 0.0.1
