@@ -6,3 +6,9 @@ spring:
       server:
         name: mcp-server-demo
         version: 0.0.1
+        type: SYNC
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+server:
+  port: 8080
+  max-http-request-header-size: 65536

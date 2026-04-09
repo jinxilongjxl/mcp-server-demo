@@ -24,17 +24,90 @@ mvn clean package
 
 ## 启动方式
 
-### 1. STDIO 方式（推荐用于 MCP 客户端集成）
+### 1. SSE 方式（当前默认）
 
-STDIO 模式下，MCP 服务器通过标准输入/输出与客户端通信，适用于 Cline、Claude Desktop 等 MCP 客户端直接调用。
+当前项目使用 `spring-ai-starter-mcp-server-webmvc` 依赖（内含 `mcp-spring-webmvc-0.10.0`），默认以 **SSE（Server-Sent Events）** 模式运行。MCP 服务器作为 Web 应用启动，客户端通过 SSE 连接。
+
+```bash
+java -jar target/mcp-server-demo-0.0.1-SNAPSHOT.jar
+```
+
+默认监听端口为 `8080`，SSE 端点为 `http://localhost:8080/sse`，消息端点为 `http://localhost:8080/mcp/message`。
+
+#### 在 Cline 中配置 SSE 方式
+
+在 `cline_mcp_settings.json` 中添加：
+
+```json
+{
+  "mcpServers": {
+    "mcp-server-demo": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://localhost:8080/sse"
+    }
+  }
+}
+```
+
+#### 在 Claude Desktop 中配置 SSE 方式
+
+在 `claude_desktop_config.json` 中添加：
+
+```json
+{
+  "mcpServers": {
+    "mcp-server-demo": {
+      "type": "sse",
+      "url": "http://localhost:8080/sse"
+    }
+  }
+}
+```
+
+### 2. STDIO 方式
+
+如需切换为 STDIO 模式（通过标准输入/输出与客户端通信），需要修改依赖和配置：
+
+**步骤 1：修改 `pom.xml` 依赖**
+
+将：
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+</dependency>
+```
+
+替换为：
+```xml
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server</artifactId>
+</dependency>
+```
+
+**步骤 2：修改 `application.yaml`**
+
+移除 `type: SYNC` 和 `server.port` 配置。
+
+**步骤 3：启动**
 
 ```bash
 java -Dspring.ai.mcp.server.stdio=true -jar target/mcp-server-demo-0.0.1-SNAPSHOT.jar
 ```
 
 #### 在 Cline 中配置 STDIO 方式
-
-在 `cline_mcp_settings.json` 中添加：
 
 ```json
 {
@@ -57,58 +130,13 @@ java -Dspring.ai.mcp.server.stdio=true -jar target/mcp-server-demo-0.0.1-SNAPSHO
 
 > 将 `/path/to/` 替换为 JAR 文件的实际路径。
 
-#### 在 Claude Desktop 中配置 STDIO 方式
-
-在 `claude_desktop_config.json` 中添加：
-
-```json
-{
-  "mcpServers": {
-    "mcp-server-demo": {
-      "command": "java",
-      "args": [
-        "-Dspring.ai.mcp.server.stdio=true",
-        "-jar",
-        "/path/to/mcp-server-demo-0.0.1-SNAPSHOT.jar"
-      ]
-    }
-  }
-}
-```
-
-### 2. HTTP 方式（Streamable HTTP）
-
-HTTP 模式下，MCP 服务器作为 Web 服务运行，客户端通过 HTTP 连接。
-
-```bash
-java -jar target/mcp-server-demo-0.0.1-SNAPSHOT.jar
-```
-
-默认监听端口为 `8080`，MCP 端点为 `http://localhost:8080/mcp`。
-
-#### 在 Cline 中配置 HTTP 方式
-
-```json
-{
-  "mcpServers": {
-    "mcp-server-demo": {
-      "autoApprove": [],
-      "disabled": false,
-      "timeout": 60,
-      "type": "streamableHttp",
-      "url": "http://localhost:8080/mcp"
-    }
-  }
-}
-```
-
 ## 使用 MCP Inspector 调试
 
 ```bash
 npx @modelcontextprotocol/inspector
 ```
 
-在 Inspector 中配置 STDIO 命令或连接 HTTP 端点即可调试工具调用。
+在 Inspector 中选择 **SSE** 传输类型，URL 填写 `http://localhost:8080/sse`，然后点击 Connect 即可调试工具调用。
 
 ## 注意事项
 
